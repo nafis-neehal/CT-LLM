@@ -1,2 +1,3 @@
 #secrets 
-TrialApp/.streamlit/secrets.toml
+CTBench_App/.streamlit/secrets.toml
+CTBench_App/ctbench_venv/
