@@ -13,6 +13,8 @@ from langchain_community.llms import HuggingFaceEndpoint
 from langchain.prompts.prompt import PromptTemplate
 from langchain.prompts import ChatPromptTemplate, FewShotPromptTemplate
 
+from google.cloud import firestore
+
 data = pd.read_csv('data/API_1791_CKD_Diab_Obese_Cancer_Hyp.csv')
 data_100 = pd.read_csv('data/final_K100_shot_response_df.csv')
 
@@ -21,6 +23,9 @@ def get_silverdata_full():
 
 def get_silverdata_100():
     return data_100
+
+def get_silverdata_ids():
+    return data['NCTId'].sort_values().reset_index(drop=True)
 
 def generate_K_shot_examples(df, NCTId, K, seed_value):
     """
@@ -55,7 +60,7 @@ def generate_K_shot_examples(df, NCTId, K, seed_value):
 
     return examples.T.reset_index(drop=True)
 
-def few_shot_examples(K, seed, NCTId, query):
+def few_shot_examples(K, seed, NCTId):
 
     k_shots = generate_K_shot_examples(data, NCTId, K, seed_value = seed)
 
@@ -67,30 +72,65 @@ def few_shot_examples(K, seed, NCTId, query):
 
         answer = f"{baseline_features}"
 
-        examples.append({"trial_info": trial_info, "query": query, "answer": clean_string(answer)})
+        examples.append({"trial_info": trial_info, "answer": clean_string(answer)})
 
     return examples
 
+# def few_shot_examples(K, seed, NCTId, query):
+
+#     k_shots = generate_K_shot_examples(data, NCTId, K, seed_value = seed)
+
+#     examples = []
+
+#     for index, row in k_shots.iterrows():
+
+#         trial_info, baseline_features = row_to_info_converter(row)
+
+#         answer = f"{baseline_features}"
+
+#         examples.append({"trial_info": trial_info, "query": query, "answer": clean_string(answer)})
+
+#     return examples
 
 def get_example_prompt_template():
     example_prompt = PromptTemplate(
-        input_variables=["trial_info", "query", "answer"], template="**##Trial Info:** {trial_info} \n\n**##Question:** {query} \n\n**##Answer:** {answer}"
+        input_variables=["trial_info", "answer"], template="**##Question:** {trial_info} \n\n **##Answer:** {answer}"
     )
     return example_prompt
 
-def get_final_prompt(K, seed, system_message, id, query):
+# def get_example_prompt_template():
+#     example_prompt = PromptTemplate(
+#         input_variables=["trial_info", "query", "answer"], template="**##Trial Info:** {trial_info} \n\n**##Question:** {query} \n\n**##Answer:** {answer}"
+#     )
+#     return example_prompt
 
-    examples = few_shot_examples(K=K, seed=seed, NCTId=id, query=query)
+def get_final_prompt(K, seed, system_message, id):
+
+    examples = few_shot_examples(K=K, seed=seed, NCTId=id)
 
     final_prompt = FewShotPromptTemplate(
         examples = examples,
         example_prompt= get_example_prompt_template(),
         prefix = system_message,
-        suffix = "**##Trial Info:** {trial_info} \n\n **##Question:** {query} \n\n **#Answer:** ",
-        input_variables = ["trial_info", "query"],
+        suffix = "**##Question:** {trial_info} \n\n **#Answer:** ",
+        input_variables = ["trial_info"],
     )
 
     return final_prompt
+
+# def get_final_prompt(K, seed, system_message, id, query):
+
+#     examples = few_shot_examples(K=K, seed=seed, NCTId=id, query=query)
+
+#     final_prompt = FewShotPromptTemplate(
+#         examples = examples,
+#         example_prompt= get_example_prompt_template(),
+#         prefix = system_message,
+#         suffix = "**##Trial Info:** {trial_info} \n\n **##Question:** {query} \n\n **#Answer:** ",
+#         input_variables = ["trial_info", "query"],
+#     )
+
+#     return final_prompt
 
 
 def clean_string(string):
@@ -169,8 +209,9 @@ def row_to_info_converter(row):
 
     return (trial_info, baseline)
 
-def print_trial(df, print_responses=False):
-    st.write("**Trial ID:**", df['NCTId'])
+def print_trial(df, print_responses=False, show_id=False):
+    if show_id:
+       st.write("**Trial ID:**", df['NCTId'])
     st.write("**Brief Title:**", df['BriefTitle'])
     st.write("**Condition:**", df['Conditions'])
     st.write("**Brief Summary:**", df['BriefSummary'])
@@ -247,6 +288,12 @@ def get_list_from_string(string):
            final_items.append(item.strip())
     
     return final_items
+
+
+# ----------------- Database -----------------#
+def format_firestore_timestamp(timestamp):
+    formatted_timestamp = timestamp.strftime('%Y-%m-%d %H:%M:%S')
+    return formatted_timestamp
 
 
 

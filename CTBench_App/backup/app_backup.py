@@ -53,48 +53,60 @@ db = firestore.Client.from_service_account_json("ct-llm-firebase-key.json")
 
 if selected == "Prompt Engineering":
 
-    all_silver_ids = module.get_silverdata_ids()
+    #data
+    df = module.get_silverdata_full()
 
-    # Default values for the system and human instructions -- fetch from DB
+    # Initialize a session state variable to keep track of the current name
+    if 'current_name' not in st.session_state:
+        st.session_state.current_name = df.iloc[0]['NCTId']  # Start with the first name
+
+    # Default values for the system and human instructions
+
     docs = db.collection('prompts').document('gpt-4-prompts').collection('all_prompts').order_by('timestamp', direction=firestore.Query.DESCENDING).limit(1).stream()
     for doc in docs:
         default_system = doc.to_dict()['prompt']
-        last_updated = module.format_firestore_timestamp(doc.to_dict()['timestamp'])
 
     #---------------- Step 1: Current Query Trial ----------------#
 
-    # Initialize a session state for the current index
-    if 'index' not in st.session_state:
-        st.session_state.index = 0
+    st. write("# Designing Final Prompt")
 
-    st.write(f"Trial {st.session_state.index + 1} of {len(all_silver_ids)}")
-
-    # Create next and previous buttons
-    c1, c2, _, _, _ = st.columns(5)
-    with c1:
-        if st.button('◀ Previous'):
-            # Decrement the index, ensuring it doesn't go below 0
-            st.session_state.index = max(0, st.session_state.index - 1)
-    with c2:
-        if st.button('Next ►'):
-            # Increment the index, ensuring it doesn't go above the number of documents
-            st.session_state.index = min(len(all_silver_ids) - 1, st.session_state.index + 1)
-
-    # Fetch the current trial from database -- cached
-    @st.cache_data(hash_funcs={firestore.Client: id})
-    def get_document(doc_id):
-        #current document
-        doc_ref = db.collection('silver_trials').document(all_silver_ids[st.session_state.index])
-        doc = doc_ref.get()
-        return doc.id, doc.to_dict()
+    st.write("## Step 1: Current Query Trial")
     
-    doc_id, doc_content = get_document(all_silver_ids[st.session_state.index])
-    
-    # Display the current document
-    st.write(f"**Trial ID:** {doc_id}")
-    show_trial = st.toggle("Show Trial Details")
-    if show_trial:
-        module.print_trial(doc_content)
+    # Get the current index based on the name
+    current_index = df.index[df['NCTId'] == st.session_state.current_name][0]
+
+    # Function to decrement the index to see the previous row
+    def previous():
+        current_index = df.index[df['NCTId'] == st.session_state.current_name][0]
+        if current_index > 0:
+            st.session_state.current_name = df.iloc[current_index - 1]['NCTId']
+
+    # Function to increment the index to see the next row
+    def next():
+        current_index = df.index[df['NCTId'] == st.session_state.current_name][0]
+        if current_index < len(df) - 1:
+            st.session_state.current_name = df.iloc[current_index + 1]['NCTId']
+
+    # Buttons for navigation
+    col1, col2, _, _ = st.columns(4)
+    with col1:
+        st.button("◀ Previous Trial", on_click=previous)
+    with col2:
+        st.button("Next Trial ►", on_click=next)
+
+    st.write(f"Trial {current_index + 1} of {len(df)}")
+
+
+
+    toggle = st.toggle("Show Trial Details")
+
+    if toggle:
+        module.print_trial(df.loc[current_index])
+
+    else:
+        st.write(df.loc[current_index])
+
+    st.divider()
 
     #---------------- Step 2: Additional K-Shot Examples ----------------#
 
@@ -106,8 +118,11 @@ if selected == "Prompt Engineering":
         K = st.selectbox("Select K", options=[0, 1, 2, 3])
 
     #k_examples = module.get_k_examples(K, st.session_state.current_name)
+    k_examples = module.few_shot_examples(K=K, seed=current_index, NCTId=st.session_state.current_name)
 
-    k_examples = module.few_shot_examples(K=K, seed=st.session_state.index, NCTId=doc_id)
+    # for i, example in enumerate(k_examples):
+    #     st.write(f"#### Example {i + 1}")
+    #     st.write(example)
 
     st.divider()
 
@@ -118,8 +133,8 @@ if selected == "Prompt Engineering":
         # Get the current values of the text areas
         system_message = st.session_state.system
 
-        prompt = module.get_final_prompt(K=K, seed=st.session_state.index, system_message=system_message, 
-                                id=doc_id)
+        prompt = module.get_final_prompt(K=K, seed=current_index, system_message=system_message, 
+                                id=st.session_state.current_name)
 
         return prompt
 
@@ -131,6 +146,8 @@ if selected == "Prompt Engineering":
     st.write("## Step 3: System Instruction")
     st.text_area("System Instruction", value=st.session_state.system, height=250, 
                  key='system', on_change=update_prompt)
+    
+    st.write(date.today())
     
     if st.button("Update and Save"):
         #get the current text area value
@@ -149,10 +166,6 @@ if selected == "Prompt Engineering":
         doc_ref = db.collection('prompts').document('gpt-4-prompts').collection('all_prompts').document(timestamp_str)
         doc_ref.set(data)
 
-        alert = st.success("System Instruction Updated and Saved Successfully!", icon="✅")
-        time.sleep(3)
-        alert.empty()
-
 
 
     st.divider()
@@ -164,13 +177,14 @@ if selected == "Prompt Engineering":
     # Call the function once to display the initial prompt
     prompt = update_prompt()
 
-    final_trial_info, final_baseline = module.row_to_info_converter(doc_content)
+    final_trial_info, final_baseline = module.row_to_info_converter(df.loc[current_index])
 
     formatted_prompt = prompt.format(trial_info=final_trial_info)
 
     st.write(formatted_prompt)
 
     st.write(f"**Reference (collected using Clinicaltrials.gov API)**: {module.clean_string(final_baseline)}")
+
 
     col1, col2, _, _, _ = st.columns(5)
     with col1:
