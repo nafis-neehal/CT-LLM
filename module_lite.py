@@ -114,6 +114,59 @@ def build_three_shot_prompt(row, db):
 
     #return system_message, example + question
 
+def get_gpt4_eval_prompt(reference, candidate):
+    system = """
+You are an expert assistant in the medical domain and clinical trial design. Your task is to determine if a number of candidate features match any features in a given reference list. You need to consider the context and semantics while matching the features.
+
+For each candidate feature:
+
+    1. Identify a matching reference feature based on similarity in context and semantics.
+    2. Remember the matched pair.
+    3. A reference feature can only be matched to one candidate feature and cannot be further considered for any consecutive matches.
+    4. If there are multiple possible matches (i.e. one reference feature can be matched to multiple candidate features or vice versa), choose the most contextually similar one.
+    5. Also keep track of which reference and candidate features remain unmatched.
+
+Once the matching is complete, provide the results in a JSON format as follows:
+"""
+    json_rep = {
+        "matched_features": [
+            ["<reference feature 1>", "<candidate feature 1>"],
+            ["<reference feature 2>", "<candidate feature 2>"]
+        ],
+        "remaining_reference_features": [
+            "<unmatched reference feature 1>",
+            "<unmatched reference feature 2>"
+        ],
+        "remaining_candidate_features": [
+            "<unmatched candidate feature 1>",
+            "<unmatched candidate feature 2>"
+        ]
+    }
+    system += json.dumps(json_rep, indent=4)
+
+    question = f"\n\nHere is the list of reference features: \n\n"
+    ir = 1
+    for ref_item in reference:
+        question += (
+            f"{ir}. {ref_item}\n"
+        )
+        ir += 1
+
+
+    question += f"\nCandidate features: \n\n"
+    ic = 1
+    for can_item in candidate:
+        question += (
+            f"{ic}. {can_item}\n"
+        )
+        ic += 1
+
+    #return system, question
+    st.write(system)
+    st.write("\n")
+    st.write(question)
+
+
 
 #### Trial2Vec Decoding from Firebase ####
 import re

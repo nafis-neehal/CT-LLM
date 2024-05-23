@@ -1,6 +1,6 @@
 import streamlit as st
 import pandas as pd 
-import module_light
+import module_lite
 import json 
 
 from google.cloud import firestore
@@ -17,7 +17,7 @@ st.write("*'LLM Leaderboard'*")
 
 # Retrieve the Firebase credentials from Streamlit secrets
 firebase_creds = st.secrets["firebase"]
-db = module_light.load_firebase(firebase_creds)
+db = module_lite.load_firebase(firebase_creds)
 id_ref = db.collection("All-IDs").document("Gold-100-ids")
 id_dat = id_ref.get().to_dict()
 all_gold_ids = id_dat['id_list']
@@ -96,7 +96,7 @@ if run_button:
 
             #gpt4-omni-score
             gpt4_omni_matches = json.loads(gen_data['gpt4-omni-matches'])
-            gpt4_omni_scores = module_light.match_to_score(gpt4_omni_matches)
+            gpt4_omni_scores = module_lite.match_to_score(gpt4_omni_matches)
             
             new_row = pd.DataFrame({'Trial_ID': [trial_id], 'Generation_Model': [gen_model_name], 
                                 'Evaluation_Model': ['gpt4-omni-score'], 
@@ -131,9 +131,9 @@ elif show_current_leaderboard:
     aggregate_score.to_csv('data/llm_leaderboard_aggregate.csv', index=False)
 
     # Plotting Precision, Recall, and F1
-    fig_precision = module_light.plot_metrics(aggregate_score, 'Precision')
-    fig_recall = module_light.plot_metrics(aggregate_score, 'Recall')
-    fig_f1 = module_light.plot_metrics(aggregate_score, 'F1')
+    fig_precision = module_lite.plot_metrics(aggregate_score, 'Precision')
+    fig_recall = module_lite.plot_metrics(aggregate_score, 'Recall')
+    fig_f1 = module_lite.plot_metrics(aggregate_score, 'F1')
 
     st.plotly_chart(fig_precision)
     st.plotly_chart(fig_recall)

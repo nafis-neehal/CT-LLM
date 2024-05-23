@@ -1,7 +1,7 @@
 import streamlit as st
 import json
 from google.cloud import firestore
-import module_light
+import module_lite
 import pandas as pd
 
 #---------------- Page Setup ----------------#
@@ -15,7 +15,7 @@ st.write("*'Human-in-the-loop evaluation'*")
 #db = firestore.Client.from_service_account_json("ct-llm-firebase-key.json")
 # Retrieve the Firebase credentials from Streamlit secrets
 firebase_creds = st.secrets["firebase"]
-db = module_light.load_firebase(firebase_creds)
+db = module_lite.load_firebase(firebase_creds)
 
 id_ref = db.collection("All-IDs").document("Bowen-Gold-100-ids")
 id_dat = id_ref.get().to_dict()
@@ -31,11 +31,11 @@ def fetch_trial_data(index, gen_model, clear_previous_response=0):
     doc = doc_ref.get()
     if doc.exists:
         data = doc.to_dict()
-        reference_list = module_light.extract_elements(data['Paper_BaselineMeasures'])
+        reference_list = module_lite.extract_elements(data['Paper_BaselineMeasures'])
         dat_ref = doc_ref.collection('gen-eval').document(gen_model)
         dat = dat_ref.get()
         model_data = dat.to_dict()
-        candidate_list = module_light.extract_elements(model_data['gen-response'])
+        candidate_list = module_lite.extract_elements(model_data['gen-response'])
         st.session_state.trial_data = data
         st.session_state.reference_list = reference_list.copy()
         st.session_state.candidate_list = candidate_list.copy()

@@ -1,6 +1,6 @@
 import streamlit as st
 import pandas as pd 
-import module_light
+import module_lite
 # import module
 # import os
 # import time
@@ -41,7 +41,7 @@ st.write("*'Examine LLM Responses'*")
 
 # Retrieve the Firebase credentials from Streamlit secrets
 firebase_creds = st.secrets["firebase"]
-db = module_light.load_firebase(firebase_creds)
+db = module_lite.load_firebase(firebase_creds)
 id_ref = db.collection("All-IDs").document("Gold-100-ids")
 id_dat = id_ref.get().to_dict()
 all_gold_ids = id_dat['id_list']
@@ -86,9 +86,9 @@ else:
                 st.write(f"**Interventions:** {data['Interventions']}")
                 st.write(f"**Primary Outcomes:** {data['PrimaryOutcomes']}")
             with st.expander("Zero-shot Prompt"):
-                module_light.build_zeroshot_prompt(data)
+                module_lite.build_zeroshot_prompt(data)
             with st.expander("Three-shot Prompt"):
-                module_light.build_three_shot_prompt(data, db)
+                module_lite.build_three_shot_prompt(data, db)
             with st.expander("Actual Responses"):
                 st.write(f"**API Response:** {data['API_BaselineMeasures']}")
                 st.write(f"**Publication Response:** {data['Paper_BaselineMeasures']}")

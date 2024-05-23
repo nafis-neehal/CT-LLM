@@ -18,11 +18,13 @@ import pandas as pd
 from google.cloud import firestore
 
 #---------------- Page Setup ----------------#
+
 page_title = "CTBench"
 page_icon = "🧪" #"🤖" 
 st.set_page_config(page_title=page_title, page_icon=page_icon, layout="centered")
 st.title(page_title + " " + page_icon)
 st.write("*'Welcome to CTBench: A Comprehensive Benchmark for Clinical Trial Design Automation Tasks'*")
+st.image("images/welcome_img.png", caption="Image Credit: bsd studio/Shutterstock.com", use_column_width=True)
 
 
 #---------------- Footer ----------------#
