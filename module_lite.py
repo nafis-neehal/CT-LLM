@@ -40,7 +40,7 @@ def build_zeroshot_prompt(row):
     question += f"<Eligibility Criteria> \n {eligibility_criteria}\n"
     question += f"<Intervention> \n {intervention}\n"
     question += f"<Outcome> \n {outcome}\n"
-    question += "##Answer:\n"
+    question += "##Answer:\n" 
 
     st.write(system_message)
     st.write("\n")
@@ -302,7 +302,6 @@ def load_firebase(firebase_creds):
     })
 
     return db 
-
 
 
 
