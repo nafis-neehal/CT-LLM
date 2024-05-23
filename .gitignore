@@ -1,4 +1,5 @@
 #secrets 
-CTBench_App/.streamlit/secrets.toml
-CTBench_App/ct_venv/
-CTBench_App/ct-llm-firebase-key.json
+.streamlit/secrets.toml
+ct_venv/
+ct_venv_lite/
+ct-llm-firebase-key.json
