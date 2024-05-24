@@ -34,11 +34,9 @@ score = pd.DataFrame(columns=['Trial_ID', 'Generation_Model', 'Evaluation_Model'
 
 run_button = st.button("Re-Run Leaderboard")
 
-show_current_leaderboard = st.button("Show Current Leaderboard")
+show_current_leaderboard = st.button("Show Latest Leaderboard")
 
 if run_button:
-
-    doc_ref = db.collection("Gold-100").get()
 
     progress_text = "Calulating... Please wait..."
     my_bar = st.progress(0, text=progress_text)
@@ -108,15 +106,7 @@ if run_button:
 
     my_bar.empty()
 
-    score.to_csv('data/llm_leaderboard.csv', index=False)
-    st.table(score)
-
-elif show_current_leaderboard:
-
-    st.header("Current Leaderboard on Gold-100 Dataset")
-
-    df = pd.read_csv('data/llm_leaderboard.csv')
-    df = df.drop(['Trial_ID'], axis=1)
+    df = score.drop(['Trial_ID'], axis=1)
 
     # Calculate mean and standard deviation
     mean_df = df.groupby(['Generation_Model', 'Evaluation_Model']).mean().reset_index()
@@ -126,11 +116,58 @@ elif show_current_leaderboard:
     aggregate_score = pd.merge(mean_df, std_df, 
                                on=['Generation_Model', 'Evaluation_Model'], 
                                suffixes=('_mean', '_std'))
-  
-    # Save the dataframe
-    aggregate_score.to_csv('data/llm_leaderboard_aggregate.csv', index=False)
+    
+    st.table(aggregate_score)
 
-    # Plotting Precision, Recall, and F1
+    #save to database
+    for index, row in aggregate_score.iterrows():
+        doc_ref = db.collection("leaderboard-scores").document(row['Generation_Model']).collection(row['Evaluation_Model']).document('scores')
+        doc_ref.set({
+            'Precision_mean': row['Precision_mean'],
+            'Precision_std': row['Precision_std'],
+            'Recall_mean': row['Recall_mean'],
+            'Recall_std': row['Recall_std'],
+            'F1_mean': row['F1_mean'],
+            'F1_std': row['F1_std']
+        }, merge=True)
+
+    st.success("Leaderboard updated successfully!")
+
+
+elif show_current_leaderboard:
+
+    st.header("Current Leaderboard on Gold-100 Dataset")
+
+    aggregate_score = pd.DataFrame(columns=['Generation_Model', 'Evaluation_Model', 'Precision_mean', 
+                                  'Precision_std', 'Recall_mean', 'Recall_std', 'F1_mean', 'F1_std'])
+
+    docs = db.collection("leaderboard-scores").list_documents()
+
+    my_bar = st.progress(0, text="Generating Leaderboard...")
+
+    c = 0
+    for doc in docs:
+        doc_name = doc.id
+        doc_ref = db.collection("leaderboard-scores").document(doc_name).collections()
+        for sub_coll in doc_ref:
+            my_bar.progress(c+1, text="Generating Leaderboard...")
+            sub_coll_name = sub_coll.id
+            sub_coll_ref = db.collection("leaderboard-scores").document(doc_name).collection(sub_coll_name).document('scores')
+            sub_coll_dat = sub_coll_ref.get().to_dict()
+
+            new_row = pd.DataFrame({'Generation_Model': [doc_name], 'Evaluation_Model': [sub_coll_name], 
+                                'Precision_mean': [sub_coll_dat['Precision_mean']], 'Precision_std': [sub_coll_dat['Precision_std']], 
+                                'Recall_mean': [sub_coll_dat['Recall_mean']], 'Recall_std': [sub_coll_dat['Recall_std']], 
+                                'F1_mean': [sub_coll_dat['F1_mean']], 'F1_std': [sub_coll_dat['F1_std']]})
+
+
+            aggregate_score = pd.concat([aggregate_score, new_row], ignore_index=True)
+
+            c+=1
+
+    my_bar.empty()
+
+    #Plotting Precision, Recall, and F1
     fig_precision = module_lite.plot_metrics(aggregate_score, 'Precision')
     fig_recall = module_lite.plot_metrics(aggregate_score, 'Recall')
     fig_f1 = module_lite.plot_metrics(aggregate_score, 'F1')
@@ -138,17 +175,6 @@ elif show_current_leaderboard:
     st.plotly_chart(fig_precision)
     st.plotly_chart(fig_recall)
     st.plotly_chart(fig_f1)
-
-    #Displaying the plots in Streamlit
-    # st.pyplot(fig_precision)
-    # st.pyplot(fig_recall)
-    # st.pyplot(fig_f1)
-
-
-    
-
-    
-
 
 
 #---------------- Footer ----------------#
