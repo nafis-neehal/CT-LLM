@@ -32,109 +32,118 @@ all_gold_ids = id_dat['id_list']
 
 score = pd.DataFrame(columns=['Trial_ID', 'Generation_Model', 'Evaluation_Model', 'Precision', 'Recall', 'F1'])
 
-#run_button = st.button("Re-Run Leaderboard")
+run_button = st.button("Re-Run Leaderboard")
 
 show_current_leaderboard = st.button("Show Latest Leaderboard")
 
-# if run_button:
+if run_button:
 
-#     progress_text = "Calulating... Please wait..."
-#     my_bar = st.progress(0, text=progress_text)
+    progress_text = "Calulating... Please wait..."
+    my_bar = st.progress(0, text=progress_text)
 
-#     #for each trial in the Gold-100 collection
-#     for index, id in enumerate(all_gold_ids):
+    #for each trial in the Gold-100 collection
+    for index, id in enumerate(all_gold_ids):
 
-#         my_bar.progress(index+1, text=progress_text)
+        my_bar.progress(index+1, text=progress_text)
 
-#         trial_id = id
-#         st.write(f"Processing Trial ID: {trial_id}")
-#         gen_ref = db.collection("Gold-100").document(trial_id).collection("gen-eval").get()
+        trial_id = id
+        gen_ref = db.collection("Gold-100").document(trial_id).collection("gen-eval").get()
 
-#         #for each model we tried for generation
-#         for gen in gen_ref:
+        #for each model we tried for generation
+        for gen in gen_ref:
 
-#             gen_model_name = gen.id
-#             gen_data = gen.to_dict()
+            gen_model_name = gen.id
+            gen_data = gen.to_dict()
 
-#             st.write(f"Processing Generation Model: {gen_model_name}")
+            #bert-score-06
+            bs06_prec = gen_data['bert-scores-06']['precision']
+            bs06_rec = gen_data['bert-scores-06']['recall']
+            bs06_f1 = gen_data['bert-scores-06']['f1']
+            new_row = pd.DataFrame({'Trial_ID': [trial_id], 'Generation_Model': [gen_model_name], 
+                                'Evaluation_Model': ['bert-scores-06'], 
+                                'Precision': [bs06_prec], 'Recall': [bs06_rec], 'F1': [bs06_f1]})
+            score = pd.concat([score, new_row], ignore_index=True)
 
-#             #bert-score-06
-#             bs06_prec = gen_data['bert-scores-06']['precision']
-#             bs06_rec = gen_data['bert-scores-06']['recall']
-#             bs06_f1 = gen_data['bert-scores-06']['f1']
-#             new_row = pd.DataFrame({'Trial_ID': [trial_id], 'Generation_Model': [gen_model_name], 
-#                                 'Evaluation_Model': ['bert-scores-06'], 
-#                                 'Precision': [bs06_prec], 'Recall': [bs06_rec], 'F1': [bs06_f1]})
-#             score = pd.concat([score, new_row], ignore_index=True)
-
-#             #bert-score-07
-#             bs07_prec = gen_data['bert-scores-07']['precision']
-#             bs07_rec = gen_data['bert-scores-07']['recall']
-#             bs07_f1 = gen_data['bert-scores-07']['f1']
-#             new_row = pd.DataFrame({'Trial_ID': [trial_id], 'Generation_Model': [gen_model_name], 
-#                                 'Evaluation_Model': ['bert-scores-07'], 
-#                                 'Precision': [bs07_prec], 'Recall': [bs07_rec], 'F1': [bs07_f1]})
-#             score = pd.concat([score, new_row], ignore_index=True)
+            #bert-score-07
+            bs07_prec = gen_data['bert-scores-07']['precision']
+            bs07_rec = gen_data['bert-scores-07']['recall']
+            bs07_f1 = gen_data['bert-scores-07']['f1']
+            new_row = pd.DataFrame({'Trial_ID': [trial_id], 'Generation_Model': [gen_model_name], 
+                                'Evaluation_Model': ['bert-scores-07'], 
+                                'Precision': [bs07_prec], 'Recall': [bs07_rec], 'F1': [bs07_f1]})
+            score = pd.concat([score, new_row], ignore_index=True)
             
-#             #bert-score-08
-#             bs08_prec = gen_data['bert-scores-08']['precision']
-#             bs08_rec = gen_data['bert-scores-08']['recall']
-#             bs08_f1 = gen_data['bert-scores-08']['f1']
-#             new_row = pd.DataFrame({'Trial_ID': [trial_id], 'Generation_Model': [gen_model_name], 
-#                                 'Evaluation_Model': ['bert-scores-08'], 
-#                                 'Precision': [bs08_prec], 'Recall': [bs08_rec], 'F1': [bs08_f1]})
-#             score = pd.concat([score, new_row], ignore_index=True)
+            #bert-score-08
+            bs08_prec = gen_data['bert-scores-08']['precision']
+            bs08_rec = gen_data['bert-scores-08']['recall']
+            bs08_f1 = gen_data['bert-scores-08']['f1']
+            new_row = pd.DataFrame({'Trial_ID': [trial_id], 'Generation_Model': [gen_model_name], 
+                                'Evaluation_Model': ['bert-scores-08'], 
+                                'Precision': [bs08_prec], 'Recall': [bs08_rec], 'F1': [bs08_f1]})
+            score = pd.concat([score, new_row], ignore_index=True)
             
-#             #bert-score-09
-#             bs09_prec = gen_data['bert-scores-09']['precision']
-#             bs09_rec = gen_data['bert-scores-09']['recall']
-#             bs09_f1 = gen_data['bert-scores-09']['f1']
-#             new_row = pd.DataFrame({'Trial_ID': [trial_id], 'Generation_Model': [gen_model_name], 
-#                                 'Evaluation_Model': ['bert-scores-09'], 
-#                                 'Precision': [bs09_prec], 'Recall': [bs09_rec], 'F1': [bs09_f1]})
+            #bert-score-09
+            bs09_prec = gen_data['bert-scores-09']['precision']
+            bs09_rec = gen_data['bert-scores-09']['recall']
+            bs09_f1 = gen_data['bert-scores-09']['f1']
+            new_row = pd.DataFrame({'Trial_ID': [trial_id], 'Generation_Model': [gen_model_name], 
+                                'Evaluation_Model': ['bert-scores-09'], 
+                                'Precision': [bs09_prec], 'Recall': [bs09_rec], 'F1': [bs09_f1]})
             
-#             score = pd.concat([score, new_row], ignore_index=True)
+            score = pd.concat([score, new_row], ignore_index=True)
 
-#             #gpt4-omni-score
-#             gpt4_omni_matches = json.loads(gen_data['gpt4-omni-matches'])
-#             gpt4_omni_scores = module_lite.match_to_score(gpt4_omni_matches)
+            #gpt4-omni-score
+            gpt4_omni_matches = json.loads(gen_data['gpt4-omni-matches'])
+            gpt4_omni_scores = module_lite.match_to_score(gpt4_omni_matches)
+
+            new_row = pd.DataFrame({'Trial_ID': [trial_id], 'Generation_Model': [gen_model_name], 
+                                'Evaluation_Model': ['gpt4-omni-score'], 
+                                'Precision': [gpt4_omni_scores['precision']], 
+                                'Recall': [gpt4_omni_scores['recall']], 
+                                'F1': [gpt4_omni_scores['f1']]})
             
-#             new_row = pd.DataFrame({'Trial_ID': [trial_id], 'Generation_Model': [gen_model_name], 
-#                                 'Evaluation_Model': ['gpt4-omni-score'], 
-#                                 'Precision': [gpt4_omni_scores['precision']], 
-#                                 'Recall': [gpt4_omni_scores['recall']], 
-#                                 'F1': [gpt4_omni_scores['f1']]})
+            score = pd.concat([score, new_row], ignore_index=True)
+
+            #gpt4-omni-score-without-context
+            gpt4_omni_matches_without_context = json.loads(gen_data['gpt4-omni-matches-without-context'])
+            gpt4_omni_scores_without_context = module_lite.match_to_score(gpt4_omni_matches_without_context)
             
-#             score = pd.concat([score, new_row], ignore_index=True)
+            new_row = pd.DataFrame({'Trial_ID': [trial_id], 'Generation_Model': [gen_model_name], 
+                                'Evaluation_Model': ['gpt4-omni-score-no_context'], 
+                                'Precision': [gpt4_omni_scores_without_context['precision']], 
+                                'Recall': [gpt4_omni_scores_without_context['recall']], 
+                                'F1': [gpt4_omni_scores_without_context['f1']]})
+            
+            score = pd.concat([score, new_row], ignore_index=True)
 
-#     my_bar.empty()
+    my_bar.empty()
 
-#     df = score.drop(['Trial_ID'], axis=1)
+    df = score.drop(['Trial_ID'], axis=1)
 
-#     # Calculate mean and standard deviation
-#     mean_df = df.groupby(['Generation_Model', 'Evaluation_Model']).mean().reset_index()
-#     std_df = df.groupby(['Generation_Model', 'Evaluation_Model']).std().reset_index()
+    # Calculate mean and standard deviation
+    mean_df = df.groupby(['Generation_Model', 'Evaluation_Model']).mean().reset_index()
+    std_df = df.groupby(['Generation_Model', 'Evaluation_Model']).std().reset_index()
 
-#     # Merge mean and standard deviation DataFrames
-#     aggregate_score = pd.merge(mean_df, std_df, 
-#                                on=['Generation_Model', 'Evaluation_Model'], 
-#                                suffixes=('_mean', '_std'))
+    # Merge mean and standard deviation DataFrames
+    aggregate_score = pd.merge(mean_df, std_df, 
+                               on=['Generation_Model', 'Evaluation_Model'], 
+                               suffixes=('_mean', '_std'))
     
-#     st.table(aggregate_score)
+    st.table(aggregate_score)
 
-#     #save to database
-#     for index, row in aggregate_score.iterrows():
-#         doc_ref = db.collection("leaderboard-scores").document(row['Generation_Model']).collection(row['Evaluation_Model']).document('scores')
-#         doc_ref.set({
-#             'Precision_mean': row['Precision_mean'],
-#             'Precision_std': row['Precision_std'],
-#             'Recall_mean': row['Recall_mean'],
-#             'Recall_std': row['Recall_std'],
-#             'F1_mean': row['F1_mean'],
-#             'F1_std': row['F1_std']
-#         }, merge=True)
+    #save to database
+    for index, row in aggregate_score.iterrows():
+        doc_ref = db.collection("leaderboard-scores").document(row['Generation_Model']).collection(row['Evaluation_Model']).document('scores')
+        doc_ref.set({
+            'Precision_mean': row['Precision_mean'],
+            'Precision_std': row['Precision_std'],
+            'Recall_mean': row['Recall_mean'],
+            'Recall_std': row['Recall_std'],
+            'F1_mean': row['F1_mean'],
+            'F1_std': row['F1_std']
+        }, merge=True)
 
-#     st.success("Leaderboard updated successfully!")
+    st.success("Leaderboard updated successfully!")
 
 
 # elif show_current_leaderboard:
@@ -156,6 +165,9 @@ if show_current_leaderboard:
         for sub_coll in doc_ref:
             my_bar.progress(c+1, text="Generating Leaderboard...")
             sub_coll_name = sub_coll.id
+            st.write(sub_coll_name)
+            if sub_coll_name == 'gpt4-omni-score-no_context':
+                continue
             sub_coll_ref = db.collection("leaderboard-scores").document(doc_name).collection(sub_coll_name).document('scores')
             sub_coll_dat = sub_coll_ref.get().to_dict()
 
@@ -163,7 +175,6 @@ if show_current_leaderboard:
                                 'Precision_mean': [sub_coll_dat['Precision_mean']], 'Precision_std': [sub_coll_dat['Precision_std']], 
                                 'Recall_mean': [sub_coll_dat['Recall_mean']], 'Recall_std': [sub_coll_dat['Recall_std']], 
                                 'F1_mean': [sub_coll_dat['F1_mean']], 'F1_std': [sub_coll_dat['F1_std']]})
-
 
             aggregate_score = pd.concat([aggregate_score, new_row], ignore_index=True)
 
