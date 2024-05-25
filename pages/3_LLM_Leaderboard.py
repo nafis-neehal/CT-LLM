@@ -165,7 +165,6 @@ if show_current_leaderboard:
         for sub_coll in doc_ref:
             my_bar.progress(c+1, text="Generating Leaderboard...")
             sub_coll_name = sub_coll.id
-            st.write(sub_coll_name)
             if sub_coll_name == 'gpt4-omni-score-no_context':
                 continue
             sub_coll_ref = db.collection("leaderboard-scores").document(doc_name).collection(sub_coll_name).document('scores')
