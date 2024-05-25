@@ -12,6 +12,8 @@ st.title(page_title + " " + page_icon)
 st.write("*'Human-in-the-loop evaluation'*")
 
 #---------------- Common Variables / Functions ----------------#
+#db = firestore.Client.from_service_account_json("ct-llm-firebase-key.json")
+# Retrieve the Firebase credentials from Streamlit secrets
 firebase_creds = st.secrets["firebase"]
 db = module_lite.load_firebase(firebase_creds)
 
@@ -37,6 +39,8 @@ def fetch_trial_data(index, gen_model, clear_previous_response=0):
         st.session_state.trial_data = data
         st.session_state.reference_list = reference_list.copy()
         st.session_state.candidate_list = candidate_list.copy()
+        st.session_state.reference_selection = None
+        st.session_state.candidate_selection = None
         st.session_state.matched_pairs = []
         st.session_state.finished = False
         st.session_state.additional_relevant_candidate_features = []
@@ -78,6 +82,63 @@ else:
     if st.button("Fetch Trial Data"):
         fetch_trial_data(st.session_state.index, select_generation_model)
 
+    if 'reference_list' in st.session_state and 'candidate_list' in st.session_state:
+        trial_data = st.session_state.trial_data
+        with st.expander("Trial Information"):
+            st.write(f"**Brief Title:** {trial_data['BriefTitle']}")
+            st.write(f"**Brief Summary:** {trial_data['BriefSummary']}")
+            st.write(f"**Eligibility Criteria:** \n\n {trial_data['EligibilityCriteria']}")
+            st.write(f"**Conditions:** {trial_data['Conditions']}")
+            st.write(f"**Interventions:** {trial_data['Interventions']}")
+            st.write(f"**Primary Outcomes:** {trial_data['PrimaryOutcomes']}")
+
+        col1, col2 = st.columns(2)
+        with col1:
+            st.subheader("Select an item from the Reference List")
+            st.session_state.reference_selection = st.radio(
+                "Reference List",
+                st.session_state.reference_list,
+                index=st.session_state.reference_list.index(st.session_state.reference_selection) if st.session_state.reference_selection in st.session_state.reference_list else 0
+            )
+
+        with col2:
+            st.subheader("Select an item from the Candidate List")
+            st.session_state.candidate_selection = st.radio(
+                "Candidate List",
+                st.session_state.candidate_list,
+                index=st.session_state.candidate_list.index(st.session_state.candidate_selection) if st.session_state.candidate_selection in st.session_state.candidate_list else 0
+            )
+
+        col1, col2, col3 = st.columns(3)
+        with col1:
+            if st.button("Match Selected Items"):
+                if st.session_state.reference_selection and st.session_state.candidate_selection:
+                    st.session_state.matched_pairs.append((st.session_state.reference_selection, st.session_state.candidate_selection))
+                    st.session_state.reference_list.remove(st.session_state.reference_selection)
+                    st.session_state.candidate_list.remove(st.session_state.candidate_selection)
+                    st.session_state.reference_selection = None
+                    st.session_state.candidate_selection = None
+                    st.success("Items matched and removed from lists.")
+                else:
+                    st.error("Please select an item from both lists to match.")
+
+        with col2:
+            if st.button("Clear Selections"):
+                st.session_state.reference_selection = None
+                st.session_state.candidate_selection = None
+                st.success("Selections cleared.")
+
+        with col3:
+            if st.button("Reset Lists"):
+                fetch_trial_data(st.session_state.index, select_generation_model, clear_previous_response=1)
+
+    st.subheader("Matched Pairs")
+    if 'matched_pairs' in st.session_state and st.session_state.matched_pairs:
+        for pair in st.session_state.matched_pairs:
+            st.write(f"{pair[0]} - {pair[1]}")
+    else:
+        st.write("No matched pairs yet.")
+
     st.subheader("Unmatched Items")
     if 'reference_list' in st.session_state:
         current_reference_list = st.session_state.reference_list
@@ -91,80 +152,9 @@ else:
 
     unmatched_dict = {"unmatched_reference": current_reference_list, "unmatched_candidate": current_candidate_list}
     unmatched_df = pd.DataFrame([unmatched_dict])
-    html = unmatched_df.to_html(index=False).replace('<table', '<table style="font-size:12px"')
+    html = unmatched_df.to_html(index=False).replace('<table', '<table style="font-size:8px"')
     st.markdown(html, unsafe_allow_html=True)
     st.write(" ")
-
-    if 'reference_list' in st.session_state and 'candidate_list' in st.session_state:
-        trial_data = st.session_state.trial_data
-        with st.expander("Trial Information"):
-            st.write(f"**Brief Title:** {trial_data['BriefTitle']}")
-            st.write(f"**Brief Summary:** {trial_data['BriefSummary']}")
-            st.write(f"**Eligibility Criteria:** \n\n {trial_data['EligibilityCriteria']}")
-            st.write(f"**Conditions:** {trial_data['Conditions']}")
-            st.write(f"**Interventions:** {trial_data['Interventions']}")
-            st.write(f"**Primary Outcomes:** {trial_data['PrimaryOutcomes']}")
-
-        col1, col2 = st.columns(2)
-        with col1:
-            st.subheader("Select items from the Reference List")
-            st.session_state.reference_selection = st.multiselect(
-                "Reference List",
-                st.session_state.reference_list
-            )
-
-        with col2:
-            st.subheader("Select items from the Candidate List")
-            st.session_state.candidate_selection = st.multiselect(
-                "Candidate List",
-                st.session_state.candidate_list
-            )
-
-        col1, col2, col3 = st.columns(3)
-        with col1:
-            if st.button("Match Selected Items"):
-                if len(st.session_state.reference_selection) == len(st.session_state.candidate_selection):
-                    for ref, cand in zip(st.session_state.reference_selection, st.session_state.candidate_selection):
-                        st.session_state.matched_pairs.append((ref, cand))
-                        st.session_state.reference_list.remove(ref)
-                        st.session_state.candidate_list.remove(cand)
-                    st.session_state.reference_selection = []
-                    st.session_state.candidate_selection = []
-                    st.success("Items matched and removed from lists.")
-                else:
-                    st.error("Please select an equal number of items from both lists to match.")
-        with col2:
-            if st.button("Clear Selections"):
-                st.session_state.reference_selection = []
-                st.session_state.candidate_selection = []
-                st.success("Selections cleared.")
-        with col3:
-            if st.button("Reset Lists"):
-                fetch_trial_data(st.session_state.index, select_generation_model, clear_previous_response=1)
-
-    st.subheader("Matched Pairs")
-    if 'matched_pairs' in st.session_state and st.session_state.matched_pairs:
-        for pair in st.session_state.matched_pairs:
-            st.write(f"{pair[0]} - {pair[1]}")
-    else:
-        st.write("No matched pairs yet.")
-
-    # st.subheader("Unmatched Items")
-    # if 'reference_list' in st.session_state:
-    #     current_reference_list = st.session_state.reference_list
-    # else:
-    #     current_reference_list = []
-
-    # if 'candidate_list' in st.session_state:
-    #     current_candidate_list = st.session_state.candidate_list
-    # else:
-    #     current_candidate_list = []
-
-    # unmatched_dict = {"unmatched_reference": current_reference_list, "unmatched_candidate": current_candidate_list}
-    # unmatched_df = pd.DataFrame([unmatched_dict])
-    # html = unmatched_df.to_html(index=False).replace('<table', '<table style="font-size:8px"')
-    # st.markdown(html, unsafe_allow_html=True)
-    # st.write(" ")
 
     if st.button("Finish Matching"):
         st.session_state.finished = True
