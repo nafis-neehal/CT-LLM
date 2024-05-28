@@ -203,7 +203,7 @@ else:
                 # }, merge=True)
                 doc_ref.set({
                     "shayom-response": json.dumps(st.session_state.result)
-                })
+                }, merge=True)
 
                 if st.session_state.index > last_saved_id_index:
                     doc_ref = db.collection('All-IDs').document('Shayom-Gold-100-ids')
