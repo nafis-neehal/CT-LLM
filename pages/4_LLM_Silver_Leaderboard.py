@@ -6,11 +6,11 @@ import json
 from google.cloud import firestore
 
 #---------------- Page Setup ----------------#
-page_title = "LLM Leaderboard"
+page_title = "LLM Silver Leaderboard"
 page_icon = "📊"
 st.set_page_config(page_title=page_title, page_icon=page_icon, layout="centered")
 st.title(page_title + " " + page_icon)
-st.write("*'LLM Leaderboard'*")
+st.write("*'LLM Silver Leaderboard'*")
 
 #---------------- Common Variables / Functions ----------------#
 #db = firestore.Client.from_service_account_json("ct-llm-firebase-key.json")
@@ -18,12 +18,11 @@ st.write("*'LLM Leaderboard'*")
 # Retrieve the Firebase credentials from Streamlit secrets
 firebase_creds = st.secrets["firebase"]
 db = module_lite.load_firebase(firebase_creds)
-id_ref = db.collection("All-IDs").document("Gold-100-ids")
+id_ref = db.collection("All-IDs").document("Silver-Data-ids")
 id_dat = id_ref.get().to_dict()
-all_gold_ids = id_dat['id_list']
+all_silver_ids = id_dat['id_list']
 
 #---------------- Main ----------------#
-
 
 # """
 # DataFrame structure
@@ -40,19 +39,33 @@ if run_button:
 
     progress_text = "Calulating... Please wait..."
     my_bar = st.progress(0, text=progress_text)
+    
+    avoid_ids = ['NCT00000620', 'NCT01483560', 'NCT04280783']
 
-    #for each trial in the Gold-100 collection
-    for index, id in enumerate(all_gold_ids):
+    #for each trial in the Silver-Data collection
+    for index, id in enumerate(all_silver_ids):
 
-        my_bar.progress(index+1, text=progress_text)
+        #my_bar.progress(index+1, text=progress_text)
+        my_bar.progress(int(((index+1)/len(all_silver_ids)) * 100), text=progress_text)
 
         trial_id = id
-        gen_ref = db.collection("Gold-100").document(trial_id).collection("gen-eval").get()
 
-        #for each model we tried for generation
+        if trial_id in avoid_ids:
+            continue
+
+        ##################
+        if trial_id >= 'NCT01656408': ###this is where gpt4-omni-match generation ended (660 trials)
+            continue
+        ##################
+
+        gen_ref = db.collection("Silver-Data").document(trial_id).collection("gen-eval").get()
+
+        #for each model we tried for generation - 4 models
         for gen in gen_ref:
 
             gen_model_name = gen.id
+            #st.write(gen_model_name)
+            
             gen_data = gen.to_dict()
 
             #bert-score-06
@@ -104,18 +117,6 @@ if run_button:
             
             score = pd.concat([score, new_row], ignore_index=True)
 
-            #gpt4-omni-score-without-context
-            gpt4_omni_matches_without_context = json.loads(gen_data['gpt4-omni-matches-without-context'])
-            gpt4_omni_scores_without_context = module_lite.match_to_score(gpt4_omni_matches_without_context)
-            
-            new_row = pd.DataFrame({'Trial_ID': [trial_id], 'Generation_Model': [gen_model_name], 
-                                'Evaluation_Model': ['gpt4-omni-score-no_context'], 
-                                'Precision': [gpt4_omni_scores_without_context['precision']], 
-                                'Recall': [gpt4_omni_scores_without_context['recall']], 
-                                'F1': [gpt4_omni_scores_without_context['f1']]})
-            
-            score = pd.concat([score, new_row], ignore_index=True)
-
     my_bar.empty()
 
     df = score.drop(['Trial_ID'], axis=1)
@@ -133,7 +134,7 @@ if run_button:
 
     #save to database
     for index, row in aggregate_score.iterrows():
-        doc_ref = db.collection("leaderboard-scores").document(row['Generation_Model']).collection(row['Evaluation_Model']).document('scores')
+        doc_ref = db.collection("silver-leaderboard-scores").document(row['Generation_Model']).collection(row['Evaluation_Model']).document('scores')
         doc_ref.set({
             'Precision_mean': row['Precision_mean'],
             'Precision_std': row['Precision_std'],
@@ -145,16 +146,19 @@ if run_button:
 
     st.success("Leaderboard updated successfully!")
 
+    score.to_csv("silver_leaderboard.csv", index=False)
+    aggregate_score.to_csv("silver_aggregate_leaderboard.csv", index=False)
 
-# elif show_current_leaderboard:
+
+# # elif show_current_leaderboard:
 if show_current_leaderboard:
 
-    st.header("Current Leaderboard on Gold-100 Dataset")
+    st.header("Current Leaderboard on Silver Dataset")
 
     aggregate_score = pd.DataFrame(columns=['Generation_Model', 'Evaluation_Model', 'Precision_mean', 
                                   'Precision_std', 'Recall_mean', 'Recall_std', 'F1_mean', 'F1_std'])
 
-    docs = db.collection("leaderboard-scores").list_documents()
+    docs = db.collection("silver-leaderboard-scores").list_documents()
 
     my_bar = st.progress(0, text="Generating Leaderboard...")
 
