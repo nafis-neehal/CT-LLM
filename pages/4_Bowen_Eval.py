@@ -45,8 +45,8 @@ def fetch_trial_data(index, gen_model, clear_previous_response=0):
         st.session_state.finished = False
         st.session_state.additional_relevant_candidate_features = []
 
-        if 'human-response' in model_data and clear_previous_response == 0:
-            human_response = json.loads(model_data['human-response'])
+        if 'bowen-response' in model_data and clear_previous_response == 0:
+            human_response = json.loads(model_data['bowen-response'])
             st.session_state.matched_pairs = human_response['matched_features']
             st.session_state.additional_relevant_candidate_features = human_response['additional_relevant_candidate_features']
             st.session_state.reference_list = human_response['remaining_reference_features']
@@ -192,10 +192,13 @@ else:
         if st.button("Submit"):
             if 'result' in st.session_state:
                 doc_ref = db.collection('Gold-100').document(all_gold_ids[st.session_state.index]).collection('gen-eval').document(select_generation_model)
+                # doc_ref.set({
+                #     "human-response": json.dumps(st.session_state.result),
+                #     "human-name": "Bowen"
+                # }, merge=True)
                 doc_ref.set({
-                    "human-response": json.dumps(st.session_state.result),
-                    "human-name": "Bowen"
-                }, merge=True)
+                    "bowen-response": json.dumps(st.session_state.result)
+                })
 
                 if st.session_state.index > last_saved_id_index:
                     doc_ref = db.collection('All-IDs').document('Bowen-Gold-100-ids')
