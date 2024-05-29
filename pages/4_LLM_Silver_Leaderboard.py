@@ -165,13 +165,13 @@ if show_current_leaderboard:
     c = 0
     for doc in docs:
         doc_name = doc.id
-        doc_ref = db.collection("leaderboard-scores").document(doc_name).collections()
+        doc_ref = db.collection("silver-leaderboard-scores").document(doc_name).collections()
         for sub_coll in doc_ref:
             my_bar.progress(c+1, text="Generating Leaderboard...")
             sub_coll_name = sub_coll.id
             if sub_coll_name == 'gpt4-omni-score-no_context':
                 continue
-            sub_coll_ref = db.collection("leaderboard-scores").document(doc_name).collection(sub_coll_name).document('scores')
+            sub_coll_ref = db.collection("silver-leaderboard-scores").document(doc_name).collection(sub_coll_name).document('scores')
             sub_coll_dat = sub_coll_ref.get().to_dict()
 
             new_row = pd.DataFrame({'Generation_Model': [doc_name], 'Evaluation_Model': [sub_coll_name], 
@@ -184,6 +184,8 @@ if show_current_leaderboard:
             c+=1
 
     my_bar.empty()
+
+    st.write(aggregate_score)
 
     #Plotting Precision, Recall, and F1
     fig_precision = module_lite.plot_metrics(aggregate_score, 'Precision')

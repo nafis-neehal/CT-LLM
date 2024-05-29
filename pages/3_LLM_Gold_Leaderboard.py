@@ -161,6 +161,8 @@ if show_current_leaderboard:
     c = 0
     for doc in docs:
         doc_name = doc.id
+        if doc_name == 'gpt4-turbo-zs' or doc_name == 'gpt4-turbo-ts':
+            continue
         doc_ref = db.collection("leaderboard-scores").document(doc_name).collections()
         for sub_coll in doc_ref:
             my_bar.progress(c+1, text="Generating Leaderboard...")
@@ -180,6 +182,8 @@ if show_current_leaderboard:
             c+=1
 
     my_bar.empty()
+
+    st.write(aggregate_score)
 
     #Plotting Precision, Recall, and F1
     fig_precision = module_lite.plot_metrics(aggregate_score, 'Precision')
