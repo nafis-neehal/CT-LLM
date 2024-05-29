@@ -186,9 +186,9 @@ if show_current_leaderboard:
     st.write(aggregate_score)
 
     #Plotting Precision, Recall, and F1
-    fig_precision = module_lite.plot_metrics(aggregate_score, 'Precision')
-    fig_recall = module_lite.plot_metrics(aggregate_score, 'Recall')
-    fig_f1 = module_lite.plot_metrics(aggregate_score, 'F1')
+    fig_precision = module_lite.plot_metrics(aggregate_score, 'Precision', 'Gold-100')
+    fig_recall = module_lite.plot_metrics(aggregate_score, 'Recall', 'Gold-100')
+    fig_f1 = module_lite.plot_metrics(aggregate_score, 'F1', 'Gold-100')
 
     st.plotly_chart(fig_precision)
     st.plotly_chart(fig_recall)
