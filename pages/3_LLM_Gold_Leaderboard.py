@@ -183,7 +183,7 @@ if show_current_leaderboard:
 
     my_bar.empty()
 
-    st.write(aggregate_score)
+    #st.write(aggregate_score)
 
     #Plotting Precision, Recall, and F1
     fig_precision = module_lite.plot_metrics(aggregate_score, 'Precision', 'Gold-100')

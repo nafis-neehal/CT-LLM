@@ -280,10 +280,10 @@ def decode_matrix(similarity_matrix_encoded):
 
 # Function to plot bar charts using Plotly for a given metric
 def plot_metrics(df, metric, dataset_name):
-    fig = px.bar(df, x='Evaluation_Model', y=f'{metric}_mean', color='Generation_Model', barmode='group',
-                 error_y=df[f'{metric}_std'],
+    fig = px.bar(df, x='Generation_Model', y=f'{metric}_mean', color='Evaluation_Model', barmode='group',
+                 #error_y=df[f'{metric}_std'],
                  labels={'Evaluation_Model': 'Evaluation Model', f'{metric}_mean': metric},
-                 title=f'{metric.capitalize()} by Generation and Evaluation Model with Standard Deviation on {dataset_name} Dataset')
+                 title=f'Average {metric.capitalize()} by Generation and Evaluation Model on {dataset_name} Dataset')
     return fig
 
 

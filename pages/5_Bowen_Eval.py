@@ -19,7 +19,7 @@ db = module_lite.load_firebase(firebase_creds)
 
 id_ref = db.collection("All-IDs").document("Bowen-Gold-100-ids")
 id_dat = id_ref.get().to_dict()
-all_gold_ids = id_dat['id_list']
+all_gold_ids = id_dat['id_list_new_50']
 if 'last_saved_id' in id_dat:
     last_saved_id_index = all_gold_ids.index(id_dat['last_saved_id'])
 else:
