@@ -53,10 +53,10 @@ if run_button:
         if trial_id in avoid_ids:
             continue
 
-        ##################
-        if trial_id >= 'NCT01656408': ###this is where gpt4-omni-match generation ended (660 trials)
-            continue
-        ##################
+        # ##################
+        # if trial_id < 'NCT02960204': ###this is where gpt4-omni-match generation ended (660 trials)
+        #     continue
+        # ##################
 
         gen_ref = db.collection("Silver-Data").document(trial_id).collection("gen-eval").get()
 
