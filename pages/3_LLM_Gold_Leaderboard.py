@@ -186,13 +186,13 @@ if show_current_leaderboard:
     #st.write(aggregate_score)
 
     #Plotting Precision, Recall, and F1
-    # fig_precision = module_lite.plot_metrics(aggregate_score.copy(), 'Precision', 'CT-Pub', save_path="gold_avg_precision.png")
-    # fig_recall = module_lite.plot_metrics(aggregate_score.copy(), 'Recall', 'CT-Pub', save_path="gold_avg_recall.png")
-    # fig_f1 = module_lite.plot_metrics(aggregate_score.copy(), 'F1', 'CT-Pub', save_path="gold_avg_f1.png")
+    fig_precision = module_lite.plot_metrics(aggregate_score.copy(), 'Precision', 'CT-Pub', save_path="gold_avg_precision.png")
+    fig_recall = module_lite.plot_metrics(aggregate_score.copy(), 'Recall', 'CT-Pub', save_path="gold_avg_recall.png")
+    fig_f1 = module_lite.plot_metrics(aggregate_score.copy(), 'F1', 'CT-Pub', save_path="gold_avg_f1.png")
 
-    fig_precision = module_lite.plot_metrics(aggregate_score.copy(), 'Precision', 'CT-Pub')
-    fig_recall = module_lite.plot_metrics(aggregate_score.copy(), 'Recall', 'CT-Pub')
-    fig_f1 = module_lite.plot_metrics(aggregate_score.copy(), 'F1', 'CT-Pub')
+    # fig_precision = module_lite.plot_metrics(aggregate_score.copy(), 'Precision', 'CT-Pub')
+    # fig_recall = module_lite.plot_metrics(aggregate_score.copy(), 'Recall', 'CT-Pub')
+    # fig_f1 = module_lite.plot_metrics(aggregate_score.copy(), 'F1', 'CT-Pub')
 
     st.plotly_chart(fig_precision)
     st.plotly_chart(fig_recall)

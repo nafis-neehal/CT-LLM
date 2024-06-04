@@ -286,7 +286,51 @@ def decode_matrix(similarity_matrix_encoded):
 #                  title=f'Average {metric.capitalize()} by Generation and Evaluation Model on {dataset_name} Dataset')
 #     return fig
 
-def plot_metrics(df, metric, dataset_name, save_path=None):
+# def plot_metrics(df, metric, dataset_name, save_path=None):
+#     # Define the new names for the generation models and evaluation models
+#     generation_model_names = {
+#         'gpt4-omni-ts': 'GPT-4o (3-Shot)',
+#         'gpt4-omni-zs': 'GPT-4o (0-Shot)',
+#         'llama3-70b-in-ts': 'Llama3 (3-Shot)',
+#         'llama3-70b-in-zs': 'Llama3 (0-Shot)'
+#     }
+    
+#     evaluation_model_names = {
+#         'bert-scores-06': 'BERT Scores (threshold = 0.6)',
+#         'bert-scores-07': 'BERT Scores (threshold = 0.7)',
+#         'bert-scores-08': 'BERT Scores (threshold = 0.8)',
+#         'bert-scores-09': 'BERT Scores (threshold = 0.9)',
+#         'gpt4-omni-score': 'GPT-4 Omni Score'
+#     }
+    
+#     # Map the new names
+#     df['Generation_Model'] = df['Generation_Model'].map(generation_model_names)
+#     df['Evaluation_Model'] = df['Evaluation_Model'].map(evaluation_model_names)
+    
+#     # Define a custom color palette
+#     custom_color_palette = ['#636EFA', '#EF553B', '#00CC96', '#AB63FA', '#FFA15A']
+
+#     fig = px.bar(df, 
+#                  x='Generation_Model', 
+#                  y=f'{metric}_mean', 
+#                  color='Evaluation_Model', 
+#                  barmode='group',
+#                  # error_y=df[f'{metric}_std'],
+#                  labels={'Evaluation_Model': 'Evaluation Model', 
+#                          f'{metric}_mean': 'Mean ' + metric, 
+#                          'Generation_Model': 'Generation Model'},
+#                  #title=f'Mean {metric.capitalize()} by Generation and Evaluation Model on {dataset_name} Dataset',
+#                  category_orders={"Generation_Model": list(generation_model_names.values())},
+#                  color_discrete_sequence=custom_color_palette,
+#                  range_y=[0, 0.6])
+    
+#     # Save the figure if a save_path is provided
+#     if save_path:
+#         fig.write_image(save_path, width=1000, height=600)
+    
+#     return fig
+
+def plot_metrics(df, metric, dataset_name, save_path=None, fig_width=1000, fig_height=600):
     # Define the new names for the generation models and evaluation models
     generation_model_names = {
         'gpt4-omni-ts': 'GPT-4o (3-Shot)',
@@ -296,10 +340,10 @@ def plot_metrics(df, metric, dataset_name, save_path=None):
     }
     
     evaluation_model_names = {
-        'bert-scores-06': 'BERT Scores (threshold = 0.6)',
-        'bert-scores-07': 'BERT Scores (threshold = 0.7)',
-        'bert-scores-08': 'BERT Scores (threshold = 0.8)',
-        'bert-scores-09': 'BERT Scores (threshold = 0.9)',
+        'bert-scores-06': 'BERT Score (threshold = 0.6)',
+        'bert-scores-07': 'BERT Score (threshold = 0.7)',
+        'bert-scores-08': 'BERT Score (threshold = 0.8)',
+        'bert-scores-09': 'BERT Score (threshold = 0.9)',
         'gpt4-omni-score': 'GPT-4 Omni Score'
     }
     
@@ -308,26 +352,33 @@ def plot_metrics(df, metric, dataset_name, save_path=None):
     df['Evaluation_Model'] = df['Evaluation_Model'].map(evaluation_model_names)
     
     # Define a custom color palette
-    custom_color_palette = ['#636EFA', '#EF553B', '#00CC96', '#AB63FA', '#FFA15A']
+    custom_color_palette = ['#636EFA', '#EF553B', '#00CC96', '#AB63FA']
 
     fig = px.bar(df, 
-                 x='Generation_Model', 
+                 x='Evaluation_Model', 
                  y=f'{metric}_mean', 
-                 color='Evaluation_Model', 
+                 color='Generation_Model', 
                  barmode='group',
-                 # error_y=df[f'{metric}_std'],
                  labels={'Evaluation_Model': 'Evaluation Model', 
-                         f'{metric}_mean': 'Mean ' + metric, 
+                         f'{metric}_mean': f'Mean {metric}', 
                          'Generation_Model': 'Generation Model'},
-                 title=f'Mean {metric.capitalize()} by Generation and Evaluation Model on {dataset_name} Dataset',
-                 category_orders={"Generation_Model": list(generation_model_names.values())},
+                 title=f'Mean {metric.capitalize()} by Evaluation and Generation Model on {dataset_name} Dataset',
+                 category_orders={"Evaluation_Model": list(evaluation_model_names.values())},
                  color_discrete_sequence=custom_color_palette,
                  range_y=[0, 0.6])
     
+    # Update layout for better spacing
+    fig.update_layout(
+        width=fig_width,
+        height=fig_height,
+        bargap=0.15, # Adjust the gap between bars
+        bargroupgap=0.1 # Adjust the gap between groups of bars
+    )
+    
     # Save the figure if a save_path is provided
     if save_path:
-        fig.write_image(save_path, width=1000, height=600)
-    
+        fig.write_image(save_path, width=fig_width, height=fig_height)
+
     return fig
 
 
