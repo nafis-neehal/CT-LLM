@@ -1,5 +1,6 @@
 import streamlit as st
 import matplotlib.pyplot as plt
+import pandas as pd
 import torch
 import torch.nn.functional as F
 import json
@@ -340,11 +341,11 @@ def plot_metrics(df, metric, dataset_name, save_path=None, fig_width=1000, fig_h
     }
     
     evaluation_model_names = {
+        'gpt4-omni-score': 'GPT-4 Omni Score',
         'bert-scores-06': 'BERT Score (threshold = 0.6)',
         'bert-scores-07': 'BERT Score (threshold = 0.7)',
         'bert-scores-08': 'BERT Score (threshold = 0.8)',
-        'bert-scores-09': 'BERT Score (threshold = 0.9)',
-        'gpt4-omni-score': 'GPT-4 Omni Score'
+        'bert-scores-09': 'BERT Score (threshold = 0.9)'
     }
     
     # Map the new names
@@ -353,6 +354,28 @@ def plot_metrics(df, metric, dataset_name, save_path=None, fig_width=1000, fig_h
     
     # Define a custom color palette
     custom_color_palette = ['#636EFA', '#EF553B', '#00CC96', '#AB63FA']
+
+    # Specify the order for evaluation models
+    evaluation_order = [
+        'GPT-4 Omni Score',
+        'BERT Score (threshold = 0.6)',
+        'BERT Score (threshold = 0.7)',
+        'BERT Score (threshold = 0.8)',
+        'BERT Score (threshold = 0.9)'
+    ]
+
+    # evaluation_order = [
+    #     'GPT-4 Omni Score',
+    #     'BERT Score (threshold = 0.7)'
+    # ]
+
+    # Convert the Evaluation_Model column to a categorical type with the specified order
+    
+    df['Evaluation_Model'] = pd.Categorical(df['Evaluation_Model'], categories=evaluation_order, ordered=True)
+    df = df.sort_values(by='Evaluation_Model')
+
+    #st.write(df)
+
 
     fig = px.bar(df, 
                  x='Evaluation_Model', 
@@ -363,17 +386,23 @@ def plot_metrics(df, metric, dataset_name, save_path=None, fig_width=1000, fig_h
                          f'{metric}_mean': f'Mean {metric}', 
                          'Generation_Model': 'Generation Model'},
                  title=f'Mean {metric.capitalize()} by Evaluation and Generation Model on {dataset_name} Dataset',
-                 category_orders={"Evaluation_Model": list(evaluation_model_names.values())},
+                 #category_orders={"Evaluation_Model": list(evaluation_model_names.values())},
+                 category_orders={"Evaluation_Model": evaluation_order},
                  color_discrete_sequence=custom_color_palette,
-                 range_y=[0, 0.6])
+                 range_y=[0, 0.75],
+                 text=f'{metric}_mean')
     
     # Update layout for better spacing
     fig.update_layout(
         width=fig_width,
         height=fig_height,
         bargap=0.15, # Adjust the gap between bars
-        bargroupgap=0.1 # Adjust the gap between groups of bars
+        bargroupgap=0.1, # Adjust the gap between groups of bars
+        uniformtext_minsize=8, # Minimum size for text
+        uniformtext_mode='hide' # Hide text if it doesn't fit
     )
+
+    fig.update_traces(texttemplate='%{text:.2f}', textposition='outside')  # Format the text
     
     # Save the figure if a save_path is provided
     if save_path:
