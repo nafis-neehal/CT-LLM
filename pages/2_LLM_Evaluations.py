@@ -21,7 +21,7 @@ from google.cloud import firestore
 #---------------- Page Setup ----------------#
 page_title = "LLM as Evaluators"
 page_icon = "🤖"
-st.set_page_config(page_title=page_title, page_icon=page_icon, layout="centered")
+st.set_page_config(page_title=page_title, page_icon=page_icon, layout="wide")
 st.title(page_title + " " + page_icon)
 st.write("*'LLM as Evaluators'*")
 
@@ -115,9 +115,17 @@ else:
                         {"Eval Model Name": "BERT-Score-0.8", **data['bert-scores-08']},
                         {"Eval Model Name": "BERT-Score-0.9", **data['bert-scores-09']},
                         {"Eval Model Name": "GPT-4 Omni", **module_lite.match_to_score(json.loads(data['gpt4-omni-matches']))},
-                        {"Eval Model Name": "Bowen", **module_lite.match_to_score(json.loads(data['bowen-response']))},
-                        {"Eval Model Name": "Shayom", **module_lite.match_to_score(json.loads(data['shayom-response']))}
+                        {"Eval Model Name": "Bowen", **module_lite.match_to_score(json.loads(data['bowen-response']))}
                     ])
+
+                    #,{"Eval Model Name": "Shayom", **module_lite.match_to_score(json.loads(data['shayom-response']))}
+
+                    if 'shayom-response' in data.keys():
+                        bert_score_df = pd.concat([bert_score_df, pd.DataFrame([{"Eval Model Name": "Shayom", **module_lite.match_to_score(json.loads(data['shayom-response']))}])])
+
+                    if "kristin-response" in data.keys():
+                        bert_score_df = pd.concat([bert_score_df, pd.DataFrame([{"Eval Model Name": "Kristin", **module_lite.match_to_score(json.loads(data['kristin-response']))}])])
+
 
                     # Specify the column order
                     column_order = ['Eval Model Name', 'precision', 'recall', 'f1']
@@ -134,12 +142,18 @@ else:
                         {"Eval Model Name" : "BERT-Score-0.8", **json.loads(data['bert-score-matches-08'])},
                         {"Eval Model Name" : "BERT-Score-0.9", **json.loads(data['bert-score-matches-09'])},
                         {"Eval Model Name" : "GPT-4 Omni", **json.loads(data['gpt4-omni-matches'])},
-                        {"Eval Model Name" : "Bowen", **json.loads(data['bowen-response'])},
-                        {"Eval Model Name" : "Shayom", **json.loads(data['shayom-response'])}
+                        {"Eval Model Name" : "Bowen", **json.loads(data['bowen-response'])}
+                        #{"Eval Model Name" : "Shayom", **json.loads(data['shayom-response'])}
                     ])
 
+                    if 'shayom-response' in data.keys():
+                        matches_df = pd.concat([matches_df, pd.DataFrame([{"Eval Model Name": "Shayom", **json.loads(data['shayom-response'])}])])
+
+                    if "kristin-response" in data.keys():
+                        matches_df = pd.concat([matches_df, pd.DataFrame([{"Eval Model Name": "Kristin", **json.loads(data['kristin-response'])}])])
+
                     # Convert the DataFrame to HTML and add some CSS to change the font size
-                    html = matches_df.to_html(index=False).replace('<table', '<table style="font-size:8px"')
+                    html = matches_df.to_html(index=False).replace('<table', '<table style="font-size:12px"')
 
                     # Display the HTML in the Streamlit app
                     st.markdown(html, unsafe_allow_html=True)
